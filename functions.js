@@ -21,7 +21,7 @@ function createRec(id,x,y,w,h,fill){
   rec.setAttribute('width',w);
   rec.setAttribute('height',h);
   rec.setAttribute('onclick','clickleft(event,this.id)')
-  rec.setAttribute('oncontextmenu','clickright(event,this.id)')
+  rec.setAttribute('oncontextmenu','clickright(event,this.id);showNodeData(this.id);')
   rec.setAttribute("fill", fill);
   return rec
 
@@ -29,7 +29,7 @@ function createRec(id,x,y,w,h,fill){
 
 function clickleft(event,id){
   s.click = true;
-  
+  showNodeData(id);
 }
 function clickright(event,id){
   document.getElementById(id).remove()
@@ -61,21 +61,39 @@ var offset = document.getElementById("gamebox").getBoundingClientRect();
 }
 function gameclick(){
 
-  if (s.click == false){
+  if (s.click == false && s.createmode==true){
     var m = createMachine();
     var ID = m.machineID
     s.Machines[ID] = m ;
+    p.stopShow();
+    s.createmode = false;
+  }
+s.click = false;
+}
+
+
+function showNodeData(machineID) {
+
+  var m = s.Machines[machineID];
+  p.startShow(m);
   
 }
-s.click =false;
+
+function pressCreateButton(type){
+
+
+  s.createtype=type;
+  s.createmode=true;
+
+
 }
 
+function generatePacket(){
 
-function showNodeData(object) {
 
-  
-  var currentCPU = object.CPU.currentCPU;
-  boxCPU = document.getElementById("machineCPUvalue");
-  setInterval(function(){boxCPU.innerHTML=currentCPU;},10)
+    var r = Math.random();
+    var packet = (r*10 | 0);
+    return packet;
+
 
 }

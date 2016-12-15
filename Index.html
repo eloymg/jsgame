@@ -2,25 +2,37 @@
 
 <head>
 <title> IT ARCHELL </title>
-<script src="itarchell.js"></script>
-<script src="functions.js"></script>
+
 </head>
 
 <body>
-<button id="buttonNothing" onclick="s.createtype='WebServer'">Nothing</button>
-<button id="buttonWebServer" onclick="s.createtype='WebServer'">Web Server</button>
-<button id="buttonLoadBalancer" onclick="s.createtype='LoadBalancer'">Load Balancer</button>
-<button id="buttonDataBase" onclick="s.createtype='DataBase'">Data Base</button>
+
+<button id="buttonTraffic" onclick="sendTrafic()">Nothing</button>
+<button id="buttonWebServer" onclick="pressCreateButton('WebServer');">Web Server</button>
+<button id="buttonLoadBalancer" onclick="pressCreateButton('LoadBalancer');">Load Balancer</button>
+<button id="buttonDataBase" onclick="pressCreateButton('DataBase');">Data Base</button>
 <svg id="gamebox" height="600" width="600" onclick="gameclick(event)" style="stroke: black;" oncontextmenu="return false">
 </svg>
 <div id="machineInfo">
+	<p>Machine ID:</p>
+	<div id="machineIDvalue">
+	</div>
 	<p>CPU Value:</p>
 	<div id="machineCPUvalue">
 	</div>
-
 </div>
 
-	
+<div id="Traffic">
+	<p>Packet generated:</p>
+	<div id="packetGenerated">
+	</div>
+	<p>Packet lost:</p>
+	<div id="packetLost">
+	</div>
+</div>
+
+<script src="itarchell.js"></script>
+<script src="functions.js"></script>	
 
 </body>
 
