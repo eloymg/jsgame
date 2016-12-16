@@ -26,7 +26,7 @@ function Traffic() {
             th.dataLosted += th.lastPacketGenerated
         }
 
-    }, 1000)
+    }, 500)
 
 }
 
@@ -42,14 +42,17 @@ function CPU(maxCPU) {
 
 }
 CPU.prototype.packetProccess = function(packet) {
-    
         var timeBusy = packet / this.maxCPU * 10
-        this.currentCPU += packet / this.maxCPU
-        var th = this;
-        setTimeout(function() {
-            th.currentCPU -= packet / th.maxCPU
-        }, timeBusy*1000)
-    
+        if(this.currentCPU+(packet/this.maxCPU)<100){
+	        this.currentCPU += packet / this.maxCPU
+	        var th = this;
+	        setTimeout(function() {
+	            	th.currentCPU -= packet / th.maxCPU
+	        		}, timeBusy*1000)
+
+        }else{
+        	packetLost(packet);
+        }
 }
 
 
