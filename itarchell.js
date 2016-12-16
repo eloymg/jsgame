@@ -12,49 +12,29 @@ Stats.prototype.getID = function() {
     return ID
 }
 
+//---------------------------------------------------------------
+//---------------------------------------------------------------
+
 function Traffic() {
     this.dataLosted = 0;
     this.lastPacketGenerated = 0;
     this.objectConnected;
     var th = this;
     setInterval(function() {
-
         th.lastPacketGenerated = generatePacket();
         if (th.objectConnected != undefined) {
             th.objectConnected.CPU.packetProccess(th.lastPacketGenerated)
         } else {
             th.dataLosted += th.lastPacketGenerated
         }
-
     }, 500)
-
 }
-
 Traffic.prototype.connect = function(machineObject) {
-
     this.objectConnected = machineObject;
-
 }
 
-function CPU(maxCPU) {
-    this.maxCPU = maxCPU
-    this.currentCPU = 0;
-
-}
-CPU.prototype.packetProccess = function(packet) {
-        var timeBusy = packet / this.maxCPU * 10
-        if(this.currentCPU+(packet/this.maxCPU)<100){
-	        this.currentCPU += packet / this.maxCPU
-	        var th = this;
-	        setTimeout(function() {
-	            	th.currentCPU -= packet / th.maxCPU
-	        		}, timeBusy*1000)
-
-        }else{
-        	packetLost(packet);
-        }
-}
-
+//---------------------------------------------------------------
+//---------------------------------------------------------------
 
 function PanelMachine() {
     this.boxCPU = document.getElementById("machineCPUvalue");
@@ -66,7 +46,7 @@ PanelMachine.prototype.startShow = function(machineObject) {
     this.boxID.innerHTML = machineObject.machineID
     var t = this;
     this.bucle = setInterval(function() {
-       
+
         t.boxCPU.innerHTML = machineObject.CPU.currentCPU;
     }, 10);
 }
@@ -74,7 +54,8 @@ PanelMachine.prototype.stopShow = function() {
     clearInterval(this.bucle);
 }
 
-
+//---------------------------------------------------------------
+//---------------------------------------------------------------
 function PanelTraffic() {
     this.boxGen = document.getElementById("packetGenerated");
     this.boxLost = document.getElementById("packetLost");
@@ -91,8 +72,8 @@ PanelTraffic.prototype.startShow = function() {
 
 }
 
-
-
+//---------------------------------------------------------------
+//---------------------------------------------------------------
 
 function Machine(posX, posY) {
     this.machineID = s.getID();
@@ -101,6 +82,29 @@ function Machine(posX, posY) {
     this.CPU = new CPU(4);
     this.incomingPackets = [];
 }
+
+function CPU(maxCPU) {
+    this.maxCPU = maxCPU
+    this.currentCPU = 0;
+
+}
+CPU.prototype.packetProccess = function(packet) {
+    var timeBusy = packet / this.maxCPU * 10
+    if (this.currentCPU + (packet / this.maxCPU) < 100) {
+        this.currentCPU += packet / this.maxCPU
+        var th = this;
+        setTimeout(function() {
+            th.currentCPU -= packet / th.maxCPU
+        }, timeBusy * 1000)
+
+    } else {
+        packetLost(packet);
+    }
+}
+
+
+//---------------------------------------------------------------
+
 
 function WebServer(posX, posY) {
     Machine.call(this, posX, posY);
@@ -113,6 +117,8 @@ WebServer.prototype.create = function() {
     var cir = createCir(this.machineID, this.posX, this.posY, radius, "grey")
     document.getElementById("gamebox").append(cir);
 };
+
+//---------------------------------------------------------------
 
 function LoadBalancer(posX, posY) {
     Machine.call(this, posX, posY);
@@ -127,6 +133,8 @@ LoadBalancer.prototype.create = function() {
     document.getElementById("gamebox").append(rec);
 };
 
+//---------------------------------------------------------------
+
 function DataBase(posX, posY) {
     Machine.call(this, posX, posY);
 
@@ -138,6 +146,9 @@ DataBase.prototype.create = function() {
     var rec = createRec(this.machineID, this.posX - side / 2, this.posY - side / 2, side, side, "yellow")
     document.getElementById("gamebox").append(rec);
 };
+
+//---------------------------------------------------------------
+//---------------------------------------------------------------
 
 var s = new Stats;
 var p = new PanelMachine;
