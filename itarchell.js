@@ -5,11 +5,37 @@ function Stats() {
     this.click = false;
     this.Machines = {};
     this.createmode = false;
+    this.connections = [];
+    this.connectMode = false;
 }
 Stats.prototype.getID = function() {
     var ID = "mach" + this.counterID;
     this.counterID += 1;
     return ID
+}
+Stats.prototype.connect = function(){
+
+
+
+    if(this.connections[0].constructor.name=="WebServer" && this.connections[1].constructor.name=="Traffic"){
+        this.connections[1].connect(this.connections[0])
+    }
+    else if(this.connections[0].constructor.name=="Traffic" && this.connections[1].constructor.name=="WebServer"){
+        this.connections[0].connect(this.connections[1])
+    }else if(this.connections[0].constructor.name=="WebServer" && this.connections[1].constructor.name=="LoadBalancer"){
+        this.connections[1].connect(this.connections[0])
+    }
+    else if(this.connections[0].constructor.name=="LoadBalancer" && this.connections[1].constructor.name=="WebServer"){
+        this.connections[0].connect(this.connections[1])
+    }else if(this.connections[0].constructor.name=="LoadBalancer" && this.connections[1].constructor.name=="Traffic"){
+        this.connections[1].connect(this.connections[0])
+    }
+    else if(this.connections[0].constructor.name=="Traffic" && this.connections[1].constructor.name=="LoadBalancer"){
+        this.connections[0].connect(this.connections[1])
+    }else{
+        alert("not possible to connect")
+    }
+    this.connections = [];
 }
 
 //---------------------------------------------------------------
@@ -17,20 +43,33 @@ Stats.prototype.getID = function() {
 
 function Traffic() {
     this.dataLosted = 0;
-    this.lastPacketGenerated = 0;
+    this.packetsgenerated = 0;
     this.objectConnected;
-    var th = this;
-    setInterval(function() {
-        th.lastPacketGenerated = generatePacket();
-        if (th.objectConnected != undefined) {
-            th.objectConnected.CPU.packetProccess(th.lastPacketGenerated)
-        } else {
-            th.dataLosted += th.lastPacketGenerated
-        }
-    }, 500)
+    
 }
 Traffic.prototype.connect = function(machineObject) {
+
+    if(this.objectConnected==undefined){
     this.objectConnected = machineObject;
+    createLine("asd",50,300,machineObject.posX,machineObject.posY)
+    }
+}
+Traffic.prototype.start = function(){
+    var th = this;
+    this.bucle = setInterval(function() {
+        var packet = generatePacket();
+        th.packetsgenerated += packet
+        if (th.objectConnected != undefined) {
+            th.objectConnected.CPU.packetProccess(packet)
+            
+        } else {
+            th.dataLosted += packet
+
+        }
+    }, 1000)
+}
+Traffic.prototype.pause = function(){
+    clearInterval(this.bucle)
 }
 
 //---------------------------------------------------------------
@@ -40,13 +79,15 @@ function PanelMachine() {
     this.boxCPU = document.getElementById("machineCPUvalue");
     this.boxID = document.getElementById("machineIDvalue");
     this.bucle;
+    this.chartbucle;
 }
 PanelMachine.prototype.startShow = function(machineObject) {
     clearInterval(this.bucle);
+    deleteChart();
+    startChart(machineObject);
     this.boxID.innerHTML = machineObject.machineID
     var t = this;
     this.bucle = setInterval(function() {
-
         t.boxCPU.innerHTML = machineObject.CPU.currentCPU;
     }, 10);
 }
@@ -66,7 +107,7 @@ PanelTraffic.prototype.startShow = function() {
 
     var th = this;
     this.bucle = setInterval(function() {
-        th.boxGen.innerHTML = traf.lastPacketGenerated;
+        th.boxGen.innerHTML = traf.packetsgenerated;
         th.boxLost.innerHTML = traf.dataLosted;
     }, 10);
 
@@ -79,19 +120,18 @@ function Machine(posX, posY) {
     this.machineID = s.getID();
     this.posX = posX;
     this.posY = posY;
-    this.CPU = new CPU(4);
-    this.incomingPackets = [];
 }
 
-function CPU(maxCPU) {
-    this.maxCPU = maxCPU
-    this.currentCPU = 0;
-
-}
-CPU.prototype.packetProccess = function(packet) {
+Machine.prototype.CPU = {
+    packetsprocesed:0,
+    maxCPU:4,
+    currentCPU:0,
+    packetProccess: function(packet) {
     var timeBusy = packet / this.maxCPU * 10
+    
     if (this.currentCPU + (packet / this.maxCPU) < 100) {
         this.currentCPU += packet / this.maxCPU
+        this.packetsprocesed += packet
         var th = this;
         setTimeout(function() {
             th.currentCPU -= packet / th.maxCPU
@@ -100,7 +140,9 @@ CPU.prototype.packetProccess = function(packet) {
     } else {
         packetLost(packet);
     }
-}
+}}
+
+
 
 
 //---------------------------------------------------------------
@@ -122,8 +164,9 @@ WebServer.prototype.create = function() {
 
 function LoadBalancer(posX, posY) {
     Machine.call(this, posX, posY);
-
+    
 };
+
 LoadBalancer.prototype = Object.create(LoadBalancer.prototype);
 LoadBalancer.prototype.constructor = LoadBalancer;
 LoadBalancer.prototype.create = function() {
@@ -132,6 +175,44 @@ LoadBalancer.prototype.create = function() {
     var rec = createRec(this.machineID, this.posX - w / 2, this.posY - h / 2, w, h, "green")
     document.getElementById("gamebox").append(rec);
 };
+LoadBalancer.prototype.connect = function(machineObject) {
+
+    if(this.CPU.objectConnected==undefined){
+    this.CPU.objectConnected = machineObject;
+    createLine("asd",this.posX,this.posY,machineObject.posX,machineObject.posY)
+    }
+}
+LoadBalancer.prototype.CPU = {
+    packetsprocesed:0,
+    objectConnected:undefined,
+    maxCPU:40,
+    currentCPU:0,
+    packetProccess: function(packet) {
+    var timeBusy = packet / this.maxCPU * 10
+    if (this.currentCPU + (packet / this.maxCPU) < 100) {
+        this.currentCPU += packet / this.maxCPU
+        var th = this;
+        th.packetsprocesed += packet
+        setTimeout(function() {
+            th.currentCPU -= packet / th.maxCPU
+        }, timeBusy * 1000)
+        setTimeout(function() {
+            th.redirectTraffic(packet);
+        }, timeBusy * 500)
+
+    } else {
+        packetLost(packet);
+    }},
+    redirectTraffic : function(packet) {
+        
+        if (this.objectConnected != undefined) {
+            this.objectConnected.CPU.packetProccess(packet)
+        } else {
+            packetLost(packet);
+        }
+}
+}
+
 
 //---------------------------------------------------------------
 

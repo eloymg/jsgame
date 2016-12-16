@@ -23,9 +23,33 @@ function createRec(id, x, y, w, h, fill) {
     return rec
 }
 
+function createLine(id, x1, y1, x2, y2) {
+    var lin = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    lin.setAttribute('id', id)
+    lin.setAttribute('x1', x1);
+    lin.setAttribute('y1', y1);
+    lin.setAttribute('x2', x2);
+    lin.setAttribute('y2', y2);
+    lin.setAttribute('stroke-width', '2')
+    lin.setAttribute('stroke', 'black')
+    document.getElementById("gamebox").append(lin);
+}
+
 function clickleft(event, id) {
-    s.click = true;
-    showNodeData(id);
+        s.click = true;
+        showNodeData(id);
+        addObjectToConnections(s.Machines[id])
+        if(s.connections.length==2){
+            s.connect();
+        }   
+}
+
+function clicktraf(){
+        s.click = true;
+        addObjectToConnections(traf)
+        if(s.connections.length==2){
+            s.connect();
+        } 
 }
 
 function clickright(event, id) {
@@ -55,20 +79,23 @@ function createMachine() {
 }
 
 function gameclick() {
+    if (s.click==false && s.createmode ==false){
+        resetConnections();
+    }
     if (s.click == false && s.createmode == true) {
         var m = createMachine();
         var ID = m.machineID
         s.Machines[ID] = m;
-        p.stopShow();
+        p.stopShow();  
         s.createmode = false;
     }
+    
     s.click = false;
 }
 
 function showNodeData(machineID) {
     var m = s.Machines[machineID];
     p.startShow(m);
-    startChart(m);
 }
 
 function pressCreateButton(type) {
@@ -86,6 +113,23 @@ function packetLost(packet) {
     traf.dataLosted += packet
 }
 
+function resetConnections(){
+
+    s.connections = [];
+
+}
+function addObjectToConnections(machineObject){
+
+    s.connections.push(machineObject);
+
+}
+function deleteChart() {
+    var canvas = document.getElementById("myChart");
+    var ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    clearInterval(p.chartBucle);
+    
+}
 function startChart(machineObject) {
     var count = 50;
     var axisx = Array.apply(null, {
@@ -139,7 +183,7 @@ function startChart(machineObject) {
         }
     });
     myNewChart.Line(data, optionsAnimation);
-    setInterval(function() {
+    p.chartBucle = setInterval(function() {
         updateData(data);
         myNewChart.Line(data, optionsNoAnimation);
     }, 1000);

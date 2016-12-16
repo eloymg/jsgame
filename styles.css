@@ -1,0 +1,44 @@
+#game{
+	height:800;
+	 width:800;
+	 position:relative;
+}
+
+#divgamebox{
+
+	 height:598;
+	 width:598;
+	 top:50;
+	 border: 2px solid #73AD21;
+	 position:absolute;
+
+}
+#Traffic{
+
+	height:150;
+	width:200;
+	position:absolute;
+	left:600px;
+	top:50;
+
+}
+#machineInfo{
+    height:150;
+	width:200;
+	position:absolute;
+	left:600px;
+	top:200;
+
+}
+
+#principalButtons{
+    top:25;
+	position:absolute;
+
+}
+
+#createButtons{
+
+	position:absolute;
+
+}
