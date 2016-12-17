@@ -122,7 +122,17 @@ function Machine(posX, posY) {
     this.posY = posY;
 }
 
-Machine.prototype.CPU = {
+
+
+
+
+
+//---------------------------------------------------------------
+
+
+function WebServer(posX, posY) {
+    Machine.call(this, posX, posY);
+    this.CPU = {
     packetsprocesed:0,
     maxCPU:4,
     currentCPU:0,
@@ -141,16 +151,6 @@ Machine.prototype.CPU = {
         packetLost(packet);
     }
 }}
-
-
-
-
-//---------------------------------------------------------------
-
-
-function WebServer(posX, posY) {
-    Machine.call(this, posX, posY);
-
 };
 WebServer.prototype = Object.create(Machine.prototype);
 WebServer.prototype.constructor = WebServer;
@@ -160,10 +160,46 @@ WebServer.prototype.create = function() {
     document.getElementById("gamebox").append(cir);
 };
 
-//---------------------------------------------------------------
 
+//---------------------------------------------------------------
+var i = 0;
 function LoadBalancer(posX, posY) {
     Machine.call(this, posX, posY);
+    this.CPU = {
+    packetsprocesed:0,
+    objectConnected:[],
+    maxCPU:40,
+    currentCPU:0,
+    packetProccess: function(packet) {
+    var timeBusy = packet / this.maxCPU * 10
+    if (this.currentCPU + (packet / this.maxCPU) < 100) {
+        this.currentCPU += packet / this.maxCPU
+        var th = this;
+        th.packetsprocesed += packet
+        setTimeout(function() {
+            th.currentCPU -= packet / th.maxCPU
+        }, timeBusy * 1000)
+        setTimeout(function() {
+            th.redirectTraffic(packet,"roundrobin");
+        }, timeBusy * 500)
+
+    } else {
+        packetLost(packet);
+    }},
+    redirectTraffic : function(packet,mode) {
+        
+        if (mode=="roundrobin"){
+            
+            if (this.objectConnected.length > 0) {
+                this.objectConnected[i].CPU.packetProccess(packet)
+            } else {
+                packetLost(packet);
+            }
+            i=(i+1) % (this.objectConnected.length);
+            console.log(i)
+    }
+}
+}
     
 };
 
@@ -177,41 +213,13 @@ LoadBalancer.prototype.create = function() {
 };
 LoadBalancer.prototype.connect = function(machineObject) {
 
-    if(this.CPU.objectConnected==undefined){
-    this.CPU.objectConnected = machineObject;
+    
+    this.CPU.objectConnected.push(machineObject);
     createLine("asd",this.posX,this.posY,machineObject.posX,machineObject.posY)
-    }
+    
 }
-LoadBalancer.prototype.CPU = {
-    packetsprocesed:0,
-    objectConnected:undefined,
-    maxCPU:40,
-    currentCPU:0,
-    packetProccess: function(packet) {
-    var timeBusy = packet / this.maxCPU * 10
-    if (this.currentCPU + (packet / this.maxCPU) < 100) {
-        this.currentCPU += packet / this.maxCPU
-        var th = this;
-        th.packetsprocesed += packet
-        setTimeout(function() {
-            th.currentCPU -= packet / th.maxCPU
-        }, timeBusy * 1000)
-        setTimeout(function() {
-            th.redirectTraffic(packet);
-        }, timeBusy * 500)
 
-    } else {
-        packetLost(packet);
-    }},
-    redirectTraffic : function(packet) {
-        
-        if (this.objectConnected != undefined) {
-            this.objectConnected.CPU.packetProccess(packet)
-        } else {
-            packetLost(packet);
-        }
-}
-}
+
 
 
 //---------------------------------------------------------------
