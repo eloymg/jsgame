@@ -38,7 +38,7 @@ function createLine(id, x1, y1, x2, y2) {
 function clickleft(event, id) {
         s.click = true;
         showNodeData(id);
-        addObjectToConnections(s.Machines[id])
+        addObjectToConnections(s.GetMachine(id))
         if(s.connections.length==2){
             s.connect();
         }   
@@ -54,7 +54,7 @@ function clicktraf(){
 
 function clickright(event, id) {
     document.getElementById(id).remove()
-    delete s.Machines[id]
+    delete s.DeleteMachine(id)
 }
 
 function createMachine() {
@@ -74,7 +74,7 @@ function createMachine() {
         default:
             var m = new WebServer(x, y);
     }
-    m.create();
+    s.AddMachine(m)
     return m
 }
 
@@ -85,7 +85,6 @@ function gameclick() {
     if (s.click == false && s.createmode == true) {
         var m = createMachine();
         var ID = m.machineID
-        s.Machines[ID] = m;
         p.stopShow();  
         s.createmode = false;
     }
@@ -94,7 +93,7 @@ function gameclick() {
 }
 
 function showNodeData(machineID) {
-    var m = s.Machines[machineID];
+    var m = s.GetMachine(machineID);
     p.startShow(m);
 }
 

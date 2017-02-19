@@ -1,43 +1,56 @@
-function Stats() {
-    this.counterID = 0;
-    this.time = 0;
-    this.createtype = "WebServer";
-    this.click = false;
-    this.Machines = {};
-    this.createmode = false;
-    this.connections = [];
-    this.connectMode = false;
-}
-Stats.prototype.getID = function() {
-    var ID = "mach" + this.counterID;
-    this.counterID += 1;
-    return ID
-}
-Stats.prototype.connect = function(){
+var Stats = (function () {
 
 
-
-    if(this.connections[0].constructor.name=="WebServer" && this.connections[1].constructor.name=="Traffic"){
-        this.connections[1].connect(this.connections[0])
-    }
-    else if(this.connections[0].constructor.name=="Traffic" && this.connections[1].constructor.name=="WebServer"){
-        this.connections[0].connect(this.connections[1])
-    }else if(this.connections[0].constructor.name=="WebServer" && this.connections[1].constructor.name=="LoadBalancer"){
-        this.connections[1].connect(this.connections[0])
-    }
-    else if(this.connections[0].constructor.name=="LoadBalancer" && this.connections[1].constructor.name=="WebServer"){
-        this.connections[0].connect(this.connections[1])
-    }else if(this.connections[0].constructor.name=="LoadBalancer" && this.connections[1].constructor.name=="Traffic"){
-        this.connections[1].connect(this.connections[0])
-    }
-    else if(this.connections[0].constructor.name=="Traffic" && this.connections[1].constructor.name=="LoadBalancer"){
-        this.connections[0].connect(this.connections[1])
-    }else{
-        alert("not possible to connect")
-    }
-    this.connections = [];
-}
-
+    var counterID = 0;
+    var time = 0; 
+    var Machines = {};   
+    
+    var singleInstance;
+    return function() {
+            if ( singleInstance ) return singleInstance;  
+            singleInstance = this;
+            this.createtype = "WebServer";
+            this.click = false;
+            this.createmode = false;
+            this.connectMode = false;
+            this.connections = []; //Seguramente pasara a privada
+            
+            this.getID = function() {
+                var ID = "mach" + counterID;
+                counterID += 1;
+                return ID
+            };
+            this.connect = function(){
+                if(this.connections[0].constructor.name=="WebServer" && this.connections[1].constructor.name=="Traffic"){
+                    this.connections[1].connect(this.connections[0])
+                }
+                else if(this.connections[0].constructor.name=="Traffic" && this.connections[1].constructor.name=="WebServer"){
+                    this.connections[0].connect(this.connections[1])
+                }else if(this.connections[0].constructor.name=="WebServer" && this.connections[1].constructor.name=="LoadBalancer"){
+                    this.connections[1].connect(this.connections[0])
+                }
+                else if(this.connections[0].constructor.name=="LoadBalancer" && this.connections[1].constructor.name=="WebServer"){
+                    this.connections[0].connect(this.connections[1])
+                }else if(this.connections[0].constructor.name=="LoadBalancer" && this.connections[1].constructor.name=="Traffic"){
+                    this.connections[1].connect(this.connections[0])
+                }
+                else if(this.connections[0].constructor.name=="Traffic" && this.connections[1].constructor.name=="LoadBalancer"){
+                    this.connections[0].connect(this.connections[1])
+                }else{
+                    alert("not possible to connect")
+                }
+                this.connections = [];
+            }
+            this.GetMachine = function(id){
+                return Machines[id]
+            }
+            this.AddMachine = function(m){
+                Machines[m.machineID] = m
+            }
+            this.DeleteMachine = function(id){
+                delete Machines[id]
+            }
+    }})();
 //---------------------------------------------------------------
 //---------------------------------------------------------------
 
@@ -121,44 +134,38 @@ function Machine(posX, posY) {
     this.posX = posX;
     this.posY = posY;
 }
-
-
-
-
-
-
 //---------------------------------------------------------------
 
 
 function WebServer(posX, posY) {
     Machine.call(this, posX, posY);
     this.CPU = {
-    packetsprocesed:0,
-    maxCPU:4,
-    currentCPU:0,
-    packetProccess: function(packet) {
-    var timeBusy = packet / this.maxCPU * 10
-    
-    if (this.currentCPU + (packet / this.maxCPU) < 100) {
-        this.currentCPU += packet / this.maxCPU
-        this.packetsprocesed += packet
-        var th = this;
-        setTimeout(function() {
-            th.currentCPU -= packet / th.maxCPU
-        }, timeBusy * 1000)
+        packetsprocesed:0,
+        maxCPU:4,
+        currentCPU:0,
+        packetProccess: function(packet) {
+            var timeBusy = packet / this.maxCPU * 10
+        
+            if (this.currentCPU + (packet / this.maxCPU) < 100) {
+                this.currentCPU += packet / this.maxCPU
+                this.packetsprocesed += packet
+                var th = this;
+                setTimeout(function() {
+                    th.currentCPU -= packet / th.maxCPU
+                }, timeBusy * 1000)
 
-    } else {
-        packetLost(packet);
+            } else {
+                packetLost(packet);
+            }
+        }
     }
-}}
+    var radius = 20
+    var html = createCir(this.machineID, this.posX, this.posY, radius, "grey")
+    document.getElementById("gamebox").append(html);
 };
 WebServer.prototype = Object.create(Machine.prototype);
 WebServer.prototype.constructor = WebServer;
-WebServer.prototype.create = function() {
-    var radius = 20
-    var cir = createCir(this.machineID, this.posX, this.posY, radius, "grey")
-    document.getElementById("gamebox").append(cir);
-};
+
 
 
 //---------------------------------------------------------------
