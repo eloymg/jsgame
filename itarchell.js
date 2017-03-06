@@ -2,39 +2,45 @@ var Stats = (function () {
 
 
     var counterID = 0;
-    var time = 0; 
-    var Machines = {};   
-    
+    var time = 0;
+    var Machines = {};
+
     var singleInstance;
     return function() {
-            if ( singleInstance ) return singleInstance;  
+            if ( singleInstance ) return singleInstance;
             singleInstance = this;
             this.createtype = "WebServer";
             this.click = false;
             this.createmode = false;
             this.connectMode = false;
             this.connections = []; //Seguramente pasara a privada
-            
+
             this.getID = function() {
                 var ID = "mach" + counterID;
                 counterID += 1;
                 return ID
             };
             this.connect = function(){
-                if(this.connections[0].constructor.name=="WebServer" && this.connections[1].constructor.name=="Traffic"){
+                if(this.connections[0].constructor.name=="WebServer" &&
+                this.connections[1].constructor.name=="Traffic"){
                     this.connections[1].connect(this.connections[0])
                 }
-                else if(this.connections[0].constructor.name=="Traffic" && this.connections[1].constructor.name=="WebServer"){
+                else if(this.connections[0].constructor.name=="Traffic" &&
+                this.connections[1].constructor.name=="WebServer"){
                     this.connections[0].connect(this.connections[1])
-                }else if(this.connections[0].constructor.name=="WebServer" && this.connections[1].constructor.name=="LoadBalancer"){
+                }else if(this.connections[0].constructor.name=="WebServer" &&
+                this.connections[1].constructor.name=="LoadBalancer"){
                     this.connections[1].connect(this.connections[0])
                 }
-                else if(this.connections[0].constructor.name=="LoadBalancer" && this.connections[1].constructor.name=="WebServer"){
+                else if(this.connections[0].constructor.name=="LoadBalancer" &&
+                 this.connections[1].constructor.name=="WebServer"){
                     this.connections[0].connect(this.connections[1])
-                }else if(this.connections[0].constructor.name=="LoadBalancer" && this.connections[1].constructor.name=="Traffic"){
+                }else if(this.connections[0].constructor.name=="LoadBalancer"
+                && this.connections[1].constructor.name=="Traffic"){
                     this.connections[1].connect(this.connections[0])
                 }
-                else if(this.connections[0].constructor.name=="Traffic" && this.connections[1].constructor.name=="LoadBalancer"){
+                else if(this.connections[0].constructor.name=="Traffic" &&
+                this.connections[1].constructor.name=="LoadBalancer"){
                     this.connections[0].connect(this.connections[1])
                 }else{
                     alert("not possible to connect")
@@ -58,7 +64,7 @@ function Traffic() {
     this.dataLosted = 0;
     this.packetsgenerated = 0;
     this.objectConnected;
-    
+
 }
 Traffic.prototype.connect = function(machineObject) {
 
@@ -74,7 +80,7 @@ Traffic.prototype.start = function(){
         th.packetsgenerated += packet
         if (th.objectConnected != undefined) {
             th.objectConnected.CPU.packetProccess(packet)
-            
+
         } else {
             th.dataLosted += packet
 
@@ -145,7 +151,7 @@ function WebServer(posX, posY) {
         currentCPU:0,
         packetProccess: function(packet) {
             var timeBusy = packet / this.maxCPU * 10
-        
+
             if (this.currentCPU + (packet / this.maxCPU) < 100) {
                 this.currentCPU += packet / this.maxCPU
                 this.packetsprocesed += packet
@@ -194,9 +200,9 @@ function LoadBalancer(posX, posY) {
         packetLost(packet);
     }},
     redirectTraffic : function(packet,mode) {
-        
+
         if (mode=="roundrobin"){
-            
+
             if (this.objectConnected.length > 0) {
                 this.objectConnected[i].CPU.packetProccess(packet)
             } else {
@@ -207,7 +213,7 @@ function LoadBalancer(posX, posY) {
     }
 }
 }
-    
+
 };
 
 LoadBalancer.prototype = Object.create(LoadBalancer.prototype);
@@ -215,15 +221,16 @@ LoadBalancer.prototype.constructor = LoadBalancer;
 LoadBalancer.prototype.create = function() {
     var w = 50;
     var h = 20;
-    var rec = createRec(this.machineID, this.posX - w / 2, this.posY - h / 2, w, h, "green")
+    var rec = createRec(this.machineID, this.posX - w / 2, this.posY - h / 2,
+      w, h, "green")
     document.getElementById("gamebox").append(rec);
 };
 LoadBalancer.prototype.connect = function(machineObject) {
 
-    
+
     this.CPU.objectConnected.push(machineObject);
     createLine("asd",this.posX,this.posY,machineObject.posX,machineObject.posY)
-    
+
 }
 
 
@@ -239,7 +246,8 @@ DataBase.prototype = Object.create(DataBase.prototype);
 DataBase.prototype.constructor = DataBase;
 DataBase.prototype.create = function() {
     var side = 30;
-    var rec = createRec(this.machineID, this.posX - side / 2, this.posY - side / 2, side, side, "yellow")
+    var rec = createRec(this.machineID, this.posX - side / 2,
+      this.posY - side / 2, side, side, "yellow")
     document.getElementById("gamebox").append(rec);
 };
 
