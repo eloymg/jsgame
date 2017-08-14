@@ -1,10 +1,8 @@
 var Stats = (function () {
 
-
     var counterID = 0;
     var time = 0;
     var Machines = {};
-
     var singleInstance;
     return function() {
             if ( singleInstance ) return singleInstance;
@@ -59,7 +57,7 @@ var Stats = (function () {
     }})();
 //---------------------------------------------------------------
 //---------------------------------------------------------------
-
+// Traffic object
 function Traffic() {
     this.dataLosted = 0;
     this.packetsgenerated = 0;
@@ -67,7 +65,6 @@ function Traffic() {
 
 }
 Traffic.prototype.connect = function(machineObject) {
-
     if(this.objectConnected==undefined){
     this.objectConnected = machineObject;
     createLine("asd",50,300,machineObject.posX,machineObject.posY)
@@ -80,10 +77,8 @@ Traffic.prototype.start = function(){
         th.packetsgenerated += packet
         if (th.objectConnected != undefined) {
             th.objectConnected.CPU.packetProccess(packet)
-
         } else {
             th.dataLosted += packet
-
         }
     }, 1000)
 }
@@ -134,7 +129,7 @@ PanelTraffic.prototype.startShow = function() {
 
 //---------------------------------------------------------------
 //---------------------------------------------------------------
-
+// Machine class
 function Machine(posX, posY) {
     this.machineID = s.getID();
     this.posX = posX;
@@ -151,7 +146,6 @@ function WebServer(posX, posY) {
         currentCPU:0,
         packetProccess: function(packet) {
             var timeBusy = packet / this.maxCPU * 10
-
             if (this.currentCPU + (packet / this.maxCPU) < 100) {
                 this.currentCPU += packet / this.maxCPU
                 this.packetsprocesed += packet
