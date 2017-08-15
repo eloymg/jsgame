@@ -104,7 +104,7 @@ function pressCreateButton(type) {
 
 function generatePacket() {
     var r = Math.random();
-    var packet = (r * 20 | 0);
+    var packet = new Packet (r * 20 | 0);
     return packet;
 }
 

@@ -1,9 +1,11 @@
 var Stats = (function () {
 
     var counterID = 0;
+    var counterPacketID = 0;	 
     var time = 0;
     var Machines = {};
     var singleInstance;
+    var LivingPackets = {};	
     return function() {
             if ( singleInstance ) return singleInstance;
             singleInstance = this;
@@ -18,6 +20,11 @@ var Stats = (function () {
                 counterID += 1;
                 return ID
             };
+	    this.getPacketID = function() {
+		 var ID = "p" + counterPacketID;
+		 counterPacketID;   
+		 return ID
+	    };
             this.connect = function(){
                 if(this.connections[0].constructor.name=="WebServer" &&
                 this.connections[1].constructor.name=="Traffic"){
@@ -61,29 +68,49 @@ var Stats = (function () {
 function Traffic() {
     this.dataLosted = 0;
     this.packetsgenerated = 0;
-    this.objectConnected;
-
-}
-Traffic.prototype.connect = function(machineObject) {
-    if(this.objectConnected==undefined){
-    this.objectConnected = machineObject;
-    createLine("asd",50,300,machineObject.posX,machineObject.posY)
-    }
+    this.connectionIN;
+    this.connectionOUT;
+    this.packetsOUT = [];
+    this.packetsIN = [];
+    this.packetReg = [];
 }
 Traffic.prototype.start = function(){
     var th = this;
     this.bucle = setInterval(function() {
         var packet = generatePacket();
-        th.packetsgenerated += packet
-        if (th.objectConnected != undefined) {
-            th.objectConnected.CPU.packetProccess(packet)
-        } else {
-            th.dataLosted += packet
-        }
+	th.packetsOUT.push(packet);    
     }, 1000)
+    this.bucleReg = setInterval(function() {
+	if(th.packetReg != 0){    
+	var d = new Date().getTime()/1000;
+	for(let [index,value] of th.packetReg.entries()){
+		
+    		if(d-value[1]>value[2]){
+		th.packetReg.splice(index,1);	
+		}
+    
+	}}
+    },500)
 }
 Traffic.prototype.pause = function(){
     clearInterval(this.bucle)
+}
+Traffic.prototype.on = function(){
+	var th = this
+    this.sendBucle = setInterval(function (){
+	if(th.packetsOUT==0){
+	console.log("no packets to process");
+	}else if(th.connectionOUT== undefined){
+	console.log("no connection");
+	}
+        else{
+	var packet = th.packetsOUT.pop();	
+	th.connectionOUT.packets.push(packet);
+	var t = new Date().getTime()/1000;	
+	th.packetReg.push([packet.ID,packet.TTL,t]);	
+	};
+    },1001);
+
 }
 
 //---------------------------------------------------------------
@@ -126,6 +153,34 @@ PanelTraffic.prototype.startShow = function() {
     }, 10);
 
 }
+//--------------------------------------------------------------
+//---------------------------------------------------------------
+// Packet class
+function Packet(size){
+	this.ID = s.getPacketID();
+	this.size = size;
+	this.loc = "traffic"
+	this.Status = "NP";
+	this.TTL = 20;
+}
+Packet.prototype.Process = function(){
+
+}
+
+//---------------------------------------------------------------
+// Connection class
+function Connection(speed,IN,OUT){
+	this.speed;
+	this.IN=IN;
+	this.OUT=OUT;
+	this.packets = [];
+}
+
+
+
+
+
+
 
 //---------------------------------------------------------------
 //---------------------------------------------------------------
@@ -167,83 +222,6 @@ WebServer.prototype = Object.create(Machine.prototype);
 WebServer.prototype.constructor = WebServer;
 
 
-
-//---------------------------------------------------------------
-var i = 0;
-function LoadBalancer(posX, posY) {
-    Machine.call(this, posX, posY);
-    this.CPU = {
-    packetsprocesed:0,
-    objectConnected:[],
-    maxCPU:40,
-    currentCPU:0,
-    packetProccess: function(packet) {
-    var timeBusy = packet / this.maxCPU * 10
-    if (this.currentCPU + (packet / this.maxCPU) < 100) {
-        this.currentCPU += packet / this.maxCPU
-        var th = this;
-        th.packetsprocesed += packet
-        setTimeout(function() {
-            th.currentCPU -= packet / th.maxCPU
-        }, timeBusy * 1000)
-        setTimeout(function() {
-            th.redirectTraffic(packet,"roundrobin");
-        }, timeBusy * 500)
-
-    } else {
-        packetLost(packet);
-    }},
-    redirectTraffic : function(packet,mode) {
-
-        if (mode=="roundrobin"){
-
-            if (this.objectConnected.length > 0) {
-                this.objectConnected[i].CPU.packetProccess(packet)
-            } else {
-                packetLost(packet);
-            }
-            i=(i+1) % (this.objectConnected.length);
-            console.log(i)
-    }
-}
-}
-
-};
-
-LoadBalancer.prototype = Object.create(LoadBalancer.prototype);
-LoadBalancer.prototype.constructor = LoadBalancer;
-LoadBalancer.prototype.create = function() {
-    var w = 50;
-    var h = 20;
-    var rec = createRec(this.machineID, this.posX - w / 2, this.posY - h / 2,
-      w, h, "green")
-    document.getElementById("gamebox").append(rec);
-};
-LoadBalancer.prototype.connect = function(machineObject) {
-
-
-    this.CPU.objectConnected.push(machineObject);
-    createLine("asd",this.posX,this.posY,machineObject.posX,machineObject.posY)
-
-}
-
-
-
-
-//---------------------------------------------------------------
-
-function DataBase(posX, posY) {
-    Machine.call(this, posX, posY);
-
-};
-DataBase.prototype = Object.create(DataBase.prototype);
-DataBase.prototype.constructor = DataBase;
-DataBase.prototype.create = function() {
-    var side = 30;
-    var rec = createRec(this.machineID, this.posX - side / 2,
-      this.posY - side / 2, side, side, "yellow")
-    document.getElementById("gamebox").append(rec);
-};
 
 //---------------------------------------------------------------
 //---------------------------------------------------------------
